@@ -1,0 +1,706 @@
+\documentclass{article}
+
+
+    \usepackage{listings}
+    \usepackage{graphicx} % Used to insert images
+    \usepackage{adjustbox} % Used to constrain images to a maximum size
+    \usepackage{color} % Allow colors to be defined
+    \usepackage{enumerate} % Needed for markdown enumerations to work
+    \usepackage{geometry} % Used to adjust the document margins
+    \usepackage{amsmath} % Equations
+    \usepackage{amssymb} % Equations
+    \usepackage[mathletters]{ucs} % Extended unicode (utf-8) support
+    \usepackage[utf8x]{inputenc} % Allow utf-8 characters in the tex document
+    \usepackage{fancyvrb} % verbatim replacement that allows latex
+    \usepackage{grffile} % extends the file name processing of package graphics
+                         % to support a larger range
+    % The hyperref package gives us a pdf with properly built
+    % internal navigation ('pdf bookmarks' for the table of contents,
+    % internal cross-reference links, web links for URLs, etc.)
+    \usepackage{hyperref}
+    \usepackage{longtable} % longtable support required by pandoc >1.10
+    \usepackage{booktabs}  % table support for pandoc > 1.12.2
+
+    \usepackage{amsmath,amsthm,amssymb,graphicx,fancyhdr,enumerate,geometry,bm}
+    \usepackage{listings, alltt}
+    \usepackage{color}
+	\usepackage{mdframed}
+	\usepackage{verbatimbox}
+
+	% algorithm
+	\usepackage{algorithm,algpseudocode}
+
+    \geometry{left=4cm, right=3.5cm, top=3.5cm, bottom=3.5cm}
+    \setlength{\parindent}{0pt}
+    \def\printsol{}
+
+	% A box for the answers
+	\newcommand{\answerbox}[1]{
+		\begin{center}
+			\fbox{\begin{minipage}{\textwidth}
+	        {\color{blue}
+		\ifdefined\printsol #1
+		\else
+		\phantom{
+		\begin{minipage}{\textwidth} #1
+		\end{minipage}
+		}
+		\fi}
+			\end{minipage}}
+		\end{center}
+}
+
+    \pagestyle{fancy}
+    \fancyhf{}
+    \lhead{ORIE 4740/5740, Spring '22, Lab 3}
+    \rhead{\thepage}
+
+    \usepackage{amsmath,amssymb}
+    \DeclareMathOperator{\E}{\mathbb{E}}
+
+    \begin{document}
+
+        \begin{center}
+                {\Large \bf Lab 3: Cross Validation}
+
+                    \bigskip
+
+                        {\bf First Name}: \underline{\hspace{2.5cm}}  {\bf Last Name}: \underline{\hspace{2.5cm}} {\bf NetID}: \underline{\hspace{2.5cm}}
+                    \end{center}
+\textbf{Lab 3 is due Feb 25th (Friday) by 11:59pm on Gradescope. Submit your answers
+as one .pdf file, including all R code that you had to write to obtain your
+answers. Regrade requests should be submitted via Gradescope.}
+
+\bigskip
+
+In this lab, we will learn to apply Cross-Validation techniques to select the
+degrees of polynomials in regression. We will consider the validation set
+approach, LOOCV and k-fold CV, and apply them to the ToyotaCorolla data set.
+Some of the commands in this lab may take a while to run in your computer.
+\bigskip
+
+Download the \texttt{ToyotaCorolla.csv} data set from Canvas.  Our goal is to
+use a linear regression model with high order terms of different degrees to
+predict the price of a vehicle for resell in the market using the variables Age
+and KM, and then find the appropriate order of the polynomial of these variables for
+our model.
+\bigskip
+
+Before analyzing the data, do the same procedures to clean it as we did previously, i.e.
+\begin{enumerate}
+	\item Delete all other columns except for \texttt{Age\_08\_04} and \texttt{KM}, which we will be using.
+	\item Check if there is any missing data. If so, deal with it.
+	\item Check the classes of the variables.
+\end{enumerate}
+
+\subsection*{The Validation Set Approach}
+When we think we have enough samples in our dataset, we can split the data into
+training / validation / test set. Recall that the validation set is ``revealed''
+to our evaluation pipeline, while the test set is only used at the very end
+(often as a sanity check for our evaluation procedure). Here, we pick half of
+the observations to be our training data. Moreover, we set the random seed to
+$1$ for reproducibility.
+\begin{Verbatim}[frame=single]
+> set.seed(1)
+> train_id = sample(nrow(corollas), nrow(corollas)/2)
+\end{Verbatim}
+
+Then we fit a linear regression model using only the data points in the training set.
+\begin{Verbatim}[frame=single]
+> lm.fit = lm(Price~Age_08_04+KM, data=corollas, subset=train_id)
+\end{Verbatim}
+
+Now we can calculate the MSE over the validation set. Write the code below to do that.
+\begin{Verbatim}[frame=single]
+
+
+\end{Verbatim}
+
+Our next step is to fit models with high-order terms of the
+predictors, making use of the \texttt{poly()} function. Write a function
+\texttt{eval\_lm()}, accepting an argument \texttt{deg},
+which fits a model with terms of degree \texttt{deg} of the predictors, and
+returns the MSE on the complement of the training set.
+
+
+\begin{Verbatim}[frame=single]
+
+
+
+
+
+
+
+
+\end{Verbatim}
+
+
+Calculate the MSE for regressions models with degree up to 5. Note, this may take a while for R to run. What do you
+observe?
+
+
+\begin{Verbatim}[frame=single]
+
+
+
+
+
+
+
+
+
+\end{Verbatim}
+
+\bigskip
+
+\subsection*{Leave-One-Out Cross-Validation}
+
+We then consider Leave-One-Out Cross-Validation (LOOCV). The LOOCV estimate can
+be automatically computed for any generalized linear model using the
+\texttt{glm()} and \texttt{cv.glm()} functions. As previously, we fit and
+validate models of degree up to 5.
+\begin{Verbatim}[frame=single]
+> cv.error=rep(0,5)
+> for (i in 1:5) {
++   glm.fit = glm(Price~poly(Age_08_04, i)+poly(KM,i), data = corollas)
++   cv.error[i] = cv.glm(corollas, glm.fit)$delta[1]
++ }
+> plot(cv.error, type="b")
+\end{Verbatim}
+
+According to the LOOCV estimates, which model do you recommend? Why?
+\begin{Verbatim}[frame=single]
+
+
+\end{Verbatim}
+
+Check $ p $-values in the summary for the cubic model. Describe your observations and compare them with your previous findings.
+
+\begin{Verbatim}[frame=single]
+
+
+
+
+
+
+
+
+
+\end{Verbatim}
+
+\subsection*{$ k $-fold Cross-Validation}
+The validation set approach and LOOCV can be thought of a two ``extremes'' of
+cross-validation. The method of $k$-fold cross-validation aims to interpolate
+between the two. The \texttt{cv.glm()} function can also perform $k$-fold CV
+(type \texttt{?cv.glm} for help with the syntax).
+We will consider polynomials of degrees one to five, and then plot the
+corresponding cross-validation errors for $k \in \{5, 10\}$. Write a script that
+computes the cross-validation error for all configurations of parameters, and
+produces an appropriate plot, and attach the generated plot.
+
+
+\begin{Verbatim}[frame=single]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{Verbatim}
+
+
+Report your findings. Do the cases $K = 5$ and $K = 10$ show different behavior?
+How do they compare with LOOCV?
+
+\begin{Verbatim}[frame=single]
+
+
+
+
+
+
+
+
+\end{Verbatim}
+
+Report and compare the running time of the three CV methods. You can use the
+following command to record running time. Which is / should be the fastest, and
+why?
+\begin{Verbatim}[frame=single]
+> ptm = proc.time()
+> # INSERT YOUR CODE HERE
+> proc.time() - ptm
+> # CHECK elapsed
+\end{Verbatim}
+
+\begin{Verbatim}[frame=single]
+
+
+
+
+
+
+
+
+
+\end{Verbatim}
+
+Without running any \texttt{R} code: do different runs of the validation test
+approach produce different estimates? How about LOOCV and $k$-fold CV? Why?
+
+\begin{Verbatim}[frame=single]
+
+
+
+
+
+
+
+
+
+\end{Verbatim}
+
+\bigskip
+
+\section*{Take Home Questions}
+
+\subsection*{Part 1. The bias-variance tradeoff}
+
+If we use higher degree polynomials, how does it affect the bias, variance and test error of the model? Explain your answer.
+\begin{Verbatim}[frame=single]
+
+
+
+\end{Verbatim}
+
+\bigskip
+Which unknown quantity are the aforementioned approaches trying to estimate?
+\begin{Verbatim}[frame=single]
+
+
+\end{Verbatim}
+\bigskip
+Consider a case where the "true model" describing some phenomenon is:
+$y=f(x)+\epsilon$, where $f(x) = x$ and $\epsilon$ is the irreducible noise
+with
+distribution $\epsilon \overset{\mathrm{i.i.d.}}{\sim}\mathcal{N}(0,1)$. Our
+training set contains two data
+points, $x = -1, x=1$ and corresponding $y$'s generated from the true model
+above.
+\\
+We want to predict $y$ when $x = 2$. What would the expected MSE of our
+prediction be if we chose $\hat{f}$ to be the constant function $0$?
+\\
+Hint:
+$\E\left[\left(\hat{f}(x)-y\right)^2\right]=\text{Var}\left(\hat{f}(x)\right)+
+  \text{Var}(\epsilon)+\left(\E\left[\hat{f}(x)-f(x)\right]\right)^2$
+\begin{Verbatim}[frame=single]
+
+
+
+
+
+
+
+
+
+\end{Verbatim}
+
+\bigskip
+Let $\mathrm{TE}^*$ be your desired test error threshold. After developing your
+model and calculating the training and test errors, you notice that your
+training error is much lower than your test error. You also notice that your
+training error is lower than $\mathrm{TE}^*$ and your test error is higher than
+$\mathrm{TE}^*$. Explain why you are seeing these errors and what steps you
+would take to remedy/improve your model.
+
+\begin{Verbatim}[frame=single]
+
+
+
+
+
+
+
+\end{Verbatim}
+
+\bigskip
+In this scenario, you notice that your test error and training error are very close to each other but both are still significantly above $TE^*$. Explain why you might see this situation and what steps you would take to remedy/improve your model.
+
+\begin{Verbatim}[frame=single]
+
+
+
+
+
+
+\end{Verbatim}
+\bigskip
+
+What would happen if the number of features are significantly greater than the
+number of observations (i.e. $p \gg n$)? How would the training error and test
+error behave?
+
+\begin{Verbatim}[frame=single]
+
+
+
+
+
+
+
+
+
+
+
+\end{Verbatim}
+
+We will now examine the bias-variance tradeoff in practice using R's
+\texttt{cars} dataset.
+This can be accessed by typing '\texttt{cars}'. If you see an error, try
+importing the \texttt{datasets} package by \texttt{library(datasets)}.
+
+We will develop 3 different models : no - intercept model, intercept model, and
+non-linear model. Consider the following procedure:
+\begin{enumerate}
+	\item Set the seed to 2022 with set.seed(2022) so we can create reproducible results
+	for each model
+	\item Split the cars data into 2/3 of training data and the rest to test
+	data
+	\item Create your model (response variable = \texttt{dist}, features =
+	\texttt{speed})
+	\item Use the test set to predict using your model
+	\item Calculate the training MSE
+	\item Calculate the test MSE
+\end{enumerate}
+You will need to write your own R code and submit.
+
+What is the training MSE and test MSE of the no intercept linear regression
+model?
+\begin{Verbatim}[frame=single]
+
+
+\end{Verbatim}
+
+What is the training MSE and test MSE of the intercept linear regression model?
+\begin{Verbatim}[frame=single]
+
+
+
+\end{Verbatim}
+
+What is the training MSE and test MSE of the quadratic (non-linear) model?\\
+Hint: use poly() as you did in first part of this lab\\
+
+\begin{Verbatim}[frame=single]
+
+
+\end{Verbatim}
+
+Repeat the above procedure a few times using a different random seed. What do
+you notice about the training errors and test errors of the different models?
+Can you explain your observations?
+\begin{Verbatim}[frame=single]
+
+
+
+
+
+
+
+
+
+\end{Verbatim}
+
+\subsection*{Part 2. Logistic regression}
+In this section, we will apply logistic regression to predict the class of
+synthetic data with noise, and evaluate our models with the cross validation
+approaches, as well as another technique called the bootstrap.
+
+Before anything else, let us run the following code to create a synthetic data
+set \texttt{df} and make a plot. Again, let us set the random seed to make sure
+our results are reproducible.
+\begin{Verbatim}[frame=single]
+> set.seed(1)
+> n = 1000
+> x1 <- runif(n)
+> x2 <- runif(n, -2, 1)
+> z <- (x1-0.2)*(x1-0.5)*(x1-0.9) * 25 - x2*(x2+1.2)*(x2-0.8) + rnorm(n)/3
+> y <- as.integer(z>0)
+> plot(x1, x2, col=c("red", "blue")[y+1])
+> df <- data.frame(x1,x2,y)
+\end{Verbatim}
+
+\paragraph{The bootstrap.} \textit{Questions 4 concerning the bootstrap is optional for this lab.} The bootstrap is another
+method for model evaluation,
+and aims to approximate the out-of-sample (test) error when applied to
+classification. In this section, we compare the bootstrap to $k$-fold cross
+validation.
+
+Bootstrap works by sampling \textbf{with replacement} from the
+original training dataset (with $n$ samples) to generate more datasets of
+size $n$ (this means that a data point may appear more than once in the
+generated data). For each of the new datasets (which we shall refer to as the
+\textit{bootstrap datasets}), the statistic of interest is recomputed,
+and its average over all runs is returned. For estimating the (expected)
+prediction error, the simplest pipeline is described in
+Algorithm~\ref{alg:vanilla-bootstrap}.
+\begin{algorithm}
+	\caption{Estimating prediction error via the bootstrap}
+	\begin{algorithmic}[1]
+		\State \textbf{Input}: dataset $\{(x_i, y_i)\}_{i=1}^n$, loss function
+		$\ell$.
+		\For{$b = 1, 2, \dots, B$}
+			\State generate set $\mathcal{S}_b$ by sampling $n$ items with
+			replacement from $\{(x_i, y_i)\}_{i = 1}^n$.
+			\State form prediction $\hat{f}^b$ by fitting the logistic
+			regression model with training data $\mathcal{S}_b$.
+			\State compute
+			$\widehat{\mathrm{err}}_b := \frac{1}{n} \sum_{i=1}^n \ell(y_i,
+			\hat{f}^b(x_i))$
+		\EndFor
+		\State \Return $\widehat{\mathrm{err}}_{\mathrm{boot}} :=
+		\frac{1}{B} \sum_{b = 1}^B \widehat{\mathrm{err}}_b$
+		\label{op:err-bootstrap}
+	\end{algorithmic}
+	\label{alg:vanilla-bootstrap}
+\end{algorithm}
+
+\newpage
+
+\paragraph{Questions on the bootstrap.}
+\begin{enumerate}
+	\item Do you expect Algorithm~\ref{alg:vanilla-bootstrap} to provide a good
+	estimate of the prediction error? Why or why not?
+
+\begin{Verbatim}[frame=single]
+
+
+
+
+\end{Verbatim}
+
+
+	\item Bootstrapping introduces significant overlap
+	between the set of data used for training and the validation set (the
+	old training set). Show that each training sample gets picked with
+	probability $\approx 0.632$ for a fixed bootstrap dataset, as the number
+	of training samples $n \to \infty$. What is the expected number of distinct
+	samples used in forming a bootstrap dataset, as $n$ grows large?
+	\label{item:bootstrap-optional}
+	\begin{Verbatim}[frame=single]
+
+
+
+
+
+
+
+
+
+
+
+	\end{Verbatim}
+	\item Using the \texttt{boot} function from the
+	library with the same name,
+	apply Algorithm~\ref{alg:vanilla-bootstrap} with $B = 10$ to the logistic
+	regression problem, using the data in \texttt{df}.You will need to
+	implement a function \texttt{boot\_fn(data, train\_id)} to pass to
+	\texttt{boot}, which will do the following:
+	\begin{enumerate}[(i)]
+		\item using the subset of \texttt{data} designated by the indices
+		\texttt{train\_id}, fit a logistic regression using \texttt{glm()}
+		(and its \texttt{family} parameters; see the \texttt{R} help text).
+		\item return the mean prediction error on the {\bf whole} dataset
+		using the \texttt{glm} fit.
+	\end{enumerate}
+
+\begin{Verbatim}[frame=single]
+
+
+
+
+
+
+
+
+
+
+
+
+\end{Verbatim}
+
+	\item (Optional)
+	In an attempt to combine the best of both worlds, the leave-one-out
+	bootstrap
+	estimate replaces Line~\ref{op:err-bootstrap} with the following estimate:
+	\begin{equation}
+	\frac{1}{n} \sum_{i=1}^n \frac{1}{|B_{\setminus \{i\}}|}
+	\sum_{b \in B_{\setminus \{i\}}} \ell(y_i, \hat{f}^b(x_i)),
+	\label{eq:loo-bootstrap}
+	\end{equation}
+	where $B_{\setminus \{i\}}$ is the set of bootstrap datasets which do not
+	contain sample $i$ from the original dataset. Note that we may swap the
+	above as
+	\begin{equation}
+		\frac{1}{n} \sum_{b \in B} \sum_{i \notin \mathcal{S}_b}^n \frac{1}{|
+		B_{\setminus \{i\}} |} \cdot \ell(y_i, \hat{f}^b(x_i))
+		\label{eq:loo-bootstrap-rewrite}
+	\end{equation}
+	We will implement Algorithm~\ref{alg:vanilla-bootstrap} with this
+	modification step-by-step in the next few questions:
+	\begin{enumerate}[(i)]
+		\item Write a function $\texttt{boot\_poly}$ that accepts two arguments,
+		\texttt{train\_id, deg}, where the first is the training indices and
+		the second is the polynomial degree, and fits a logistic regression
+		model with \texttt{deg}-polynomial terms for the predictors, using the
+		samples corresponding to \texttt{train\_id}, returning the fit model.
+		(\textit{Hint: Use the \texttt{glm()} function and is \texttt{family}
+		parameter to specify that you are fitting a logistic reg. model.}
+
+
+\begin{Verbatim}[frame=single]
+
+
+
+
+
+
+
+
+
+
+
+\end{Verbatim}
+
+		\item Write a function $\texttt{boot\_num}$ that accepts two arguments,
+		an index \texttt{i} and a $n \times B$ \textbf{matrix} where column $b$
+		contains the training indices of bootstrap $b$, and returns the number
+		of bootstrap datasets that do not contain \texttt{i}.
+
+\begin{Verbatim}[frame=single]
+
+
+
+
+
+
+\end{Verbatim}
+
+
+		\item Use the following code to fit $B = 10$ bootstrap datasets for
+		given degree \texttt{deg = 2} as a guide:
+		\begin{verbatim}
+			> B <- 10
+			> deg <- 2
+			> all_inds <- matrix(sample(1:n, B * n, replace=TRUE), ncol=B)
+			> boot_fits <- apply(all_inds, 2,
+			+ function(trainind) return(boot_poly(df,trainind, deg)))
+
+		\end{verbatim}
+		The above code returns a $B$-dimensional vector of \texttt{glm} objects.
+		Using \texttt{bootNum}, write a function
+		computing~\eqref{eq:loo-bootstrap-rewrite}.
+		(\textit{Hint}: while not necessary, you may find the functions
+		\texttt{apply, lapply, sapply} useful.)
+		\begin{Verbatim}[frame=single]
+
+
+
+
+
+
+
+
+
+
+
+
+		\end{Verbatim}
+
+	\end{enumerate}
+\end{enumerate}
+
+
+
+
+
+\paragraph{Logistic regression with cross-validation.}
+We want to fit logistic regression models of different degrees $p$, up to $p =
+5$ (see the \texttt{family} parameter of the \texttt{glm()} function).
+First, hold out $100$ samples of the dataset as a test set, and use the
+remainder as training set. Use $k$-fold cross validation with $k = 10$ and
+LOOCV to evaluate the performance for each degree $p$, and compare with LOOCV.
+Then, choose the best model from the $k$-fold validation step and compute its
+error on the test set. Some remarks:
+\begin{itemize}
+	\item we are using the overall accuracy rate as the metric for the error.
+	\item define a cost function using the following code, and pass that
+	function as the cost argument to \texttt{cv.glm()}:
+\begin{Verbatim}[frame=single]
+	cost_fn <- function(r, pi=0) {
+		mean(abs(r - pi) > 0.5)
+	}
+\end{Verbatim}
+	What does the \texttt{cost\_fn} function do, and how does it relate to
+	classification with logistic regression?
+	\begin{Verbatim}[frame=single]
+
+
+
+
+
+
+	\end{Verbatim}
+
+	\item when converting the predictions to integers, which threshold should
+	you use?
+	\begin{Verbatim}[frame=single]
+
+	\end{Verbatim}
+\end{itemize}
+
+Report your findings below:
+\begin{enumerate}
+	\item What are the validation errors you get for different degrees
+	($k$-fold vs. LOOCV)? Which model do they suggest you should choose? Is
+	the choice reasonable?
+	\begin{Verbatim}[frame=single]
+
+
+
+
+
+
+	\end{Verbatim}
+
+	\item What is the test error of your chosen model?
+	\begin{Verbatim}[frame=single]
+
+
+
+
+	\end{Verbatim}
+
+
+\end{enumerate}
+
+
+\paragraph{Concept map.} Make a concept map for the topics covered by this lab.
+While there is no single right answer, you are expected to demonstrate that you
+understand the relationships between various topics in the lab.
+
+\end{document}

@@ -1,0 +1,544 @@
+\documentclass{article}
+
+    \usepackage{graphicx} % Used to insert images
+    \usepackage{adjustbox} % Used to constrain images to a maximum size
+    \usepackage{color} % Allow colors to be defined
+    \usepackage{enumerate} % Needed for markdown enumerations to work
+    \usepackage{geometry} % Used to adjust the document margins
+    \usepackage{amsmath} % Equations
+    \usepackage{amssymb} % Equations
+    \usepackage[mathletters]{ucs} % Extended unicode (utf-8) support
+    \usepackage[utf8x]{inputenc} % Allow utf-8 characters in the tex document
+    \usepackage{fancyvrb} % verbatim replacement that allows latex
+    \usepackage{grffile} % extends the file name processing of package graphics
+                         % to support a larger range
+    % The hyperref package gives us a pdf with properly built
+    % internal navigation ('pdf bookmarks' for the table of contents,
+    % internal cross-reference links, web links for URLs, etc.)
+    \usepackage{hyperref}
+    \usepackage{longtable} % longtable support required by pandoc >1.10
+    \usepackage{booktabs}  % table support for pandoc > 1.12.2
+
+    \usepackage{amsmath,amsthm,amssymb,graphicx,fancyhdr,enumerate,geometry}
+    \usepackage{listings, alltt}
+    \usepackage{color}
+    \usepackage{mdframed}
+
+    \geometry{left=4cm, right=3.5cm, top=3.5cm, bottom=3.5cm}
+    \setlength{\parindent}{0pt}
+
+	% A box for the answers
+	\newcommand{\answerbox}[1]{
+	\begin{center}
+		\ifdefined\printsol
+			\begin{mdframed}
+				\begin{minipage}{0.95\textwidth}
+					{\color{blue} {#1}}
+				\end{minipage}
+			\end{mdframed}
+		\else
+			\begin{mdframed}
+				\begin{minipage}{0.95\textwidth}
+					\phantom{\parbox{\linewidth}{#1}}
+				\end{minipage}
+			\end{mdframed}
+		\fi
+		\end{center}
+	}
+
+	% printing for code blocks
+	\newcommand{\sol}[1]{\ifdefined\printsol
+		{\color{blue}%
+		#1
+		}
+		\fi
+	}
+
+    \newcommand{\answer}[1]{{\color{blue}#1}}
+    \newcommand{\Sol}{\noindent \textcolor{blue}{Solution: }}
+
+    \newcounter{labcounter}
+
+    \pagestyle{fancy}
+    \fancyhf{}
+    \lhead{ORIE 4740, Spring 2022, Lab 2}
+    \rhead{\thepage}
+
+    \begin{document}
+
+        \begin{center}
+                {\Large \bf Lab 2: Basic Classification Algorithms}
+
+                    \bigskip
+
+                        {\bf First Name}: \underline{\hspace{2.5cm}}  {\bf Last Name}: \underline{\hspace{2.5cm}} {\bf NetID}: \underline{\hspace{2.5cm}}
+                    \end{center}
+
+
+
+				\textbf{Lab 2 will be graded. Upload your work to
+					Gradescope by
+				Feb. 18th at 11:59pm. Make sure to upload a single .pdf
+				containing your answers and the R code you wrote to obtain
+				them. Regrade requests should be made via Gradescope.}
+
+
+\bigskip
+
+In this lab we will learn the basics of logistic regression and the $k$-nearest
+neighbor algorithm, and learn how to measure the accuracy of the models we
+build.
+
+\section*{Part (a): Logistic regression}
+
+Go to Canvas and download the \texttt{Titanic} data set.
+
+\bigskip
+
+The Titanic data set contains information(age, gender, passenger class
+etc.) about 1309 passengers that travelled on the ship Titanic and whether or
+not they survived. We will fit a logistic regression model to predict
+what sorts of passengers were more likely to survive.
+
+\bigskip
+
+We will divide the {\tt{Titanic}} data set into 2 parts: the training data set
+and the test data set. We will fit the model and learn the
+parameters with the training set, and then test the accuracy of our
+model \emph{\textbf{using the test set}} by comparing the predicted outcomes of the data
+in the test set using our model and their true outcomes. The training
+and test sets must be created from the original data without bias. In
+this lab, we'll randomly sample $2/3$ of the original data to be the
+training data and let the rest be the test data.
+Why must we we the test set to calculate the accuracy?
+\answerbox{
+answer:
+}
+
+\bigskip
+
+Load the titanic data set into R. There are 11 variables in the data set
+except the outcome variable. We suspect that {\tt Passenger ID}, {\tt Name},
+{\tt Ticket} and {\tt Cabin} are not useful in predicting survival chance
+so we can remove them. In addition, the {\tt Cabin} column has lots of missing
+data. Check if there is still any other missing data in the data set.
+You'll find the {\tt Age} column also has many rows where the data is missing.
+Can you think of two approaches to deal with these rows?
+
+\answerbox{
+answer:
+}
+
+\bigskip
+
+After figuring out how to deal with missing data, we need to check if
+all categorical variables have been identified by R and coerce them if
+not. Finally, we can create the training and test sets. Note that you
+need to store the outcome value of the test set separately and remove
+the outcome column from the test set.
+
+Now you can fit the logistic regression model to the training data. Report the
+summary of your model. Once you have fitted the model, use your model to
+predict the outcomes of the test data. Since 'Survived' is already binary valued, you do not need to coerce the 'Survive' column to a factor. Also DO NOT remove the "Survived" column from df.test. \\(Note that the program may reports error when using predict function due to some factor levels only being present in the test samples. In this case, you can do one of the following:\\
+- remove test samples containing the offending factors\\
+- do not coerce the variable to factor\\
+- retry with a new random seed until you get a split that works, and keep that seed\\Depends on the split of your data set, you may or may not encounter this issue. see also: https://www.r-bloggers.com/linear-logistic-regression-in-r-dealing-with-unknown-factor-levels-in-test-data/ )
+
+\bigskip
+
+The logistic regression model we built will output the probability of
+surviving of each passenger in the test data set. To get a binary
+prediction of whether a passenger survives or not, we need to pick a
+threshold. For now we simply predict a passenger would survive if the
+output survival probability is greater than or equal to 0.5. What is the (overall) accuracy of your model?
+In addition, report the true positive and true negative rates.
+\answerbox{
+  answer:
+}
+
+Now that you know how to measure accuracy, can you find a very simple
+classifier that would give you a decent overall accuracy (about $65\%$
+or more) by just looking at the data?
+
+\answerbox{
+  answer:
+}
+
+\bigskip
+
+As you can see, the data is biased. As the data gets more biased, our
+formula for overall accuracy becomes less indicative of how good our model is. A
+way to solve this is to use the following formula:
+
+\[
+    \mathtt{balanced\_accuracy} =
+    \frac{1}{2} \times \frac{t_p}{(t_p+f_n)} + \frac{1}{2} \times
+    \frac{t_n}{(t_n+f_p)}
+\]
+
+Using this formula, calculate the balanced accuracy of our logistic
+regression model on the test dataset.
+
+\answerbox{
+	answer:
+}
+
+Identify which predictors are most influential to the final
+prediction.
+
+\answerbox{
+	answer:
+}
+
+%\bigskip
+
+\section*{Part (b): K Nearest Neighbors}
+
+We will continue analyzing the \texttt{Titanic} data set, but with a different classification method. In particular, We will learn how to do KNN in R, and compare the performance of KNN with the logistic regression approach used in part (a).
+
+\bigskip
+
+Do the same procedures to the Titanic data set as we did in part(a), i.e.
+\begin{itemize}
+\item[1.] Delete columns {\tt Passenger ID}, {\tt Name}, {\tt Ticket} and {\tt
+Cabin}.
+\item[2.] Deal with missing data by removing all rows associated with a missing
+value (alternatively, you may replace missing values with mean/median).
+\item[3.] Check for factor variables and convert them into dummy variables.
+\end{itemize}
+Note that we did not need the third step in part(a). Neither KNN nor linear/logistic regression deals with factor variables directly. The \texttt{lm()} and \texttt{glm()} functions in R automatically convert factors to dummies, but the built-in function \texttt{knn()} for KNN does not.\\
+
+Can you think of the reason why KNN cannot deal with factor variables directly?
+
+\answerbox{
+answer:}
+
+To convert
+factor variables into dummy variables, we use the function
+\texttt{model.matrix()}.
+
+\begin{verbatim}
+> titanic$Sex <- model.matrix( ~ Sex - 1, data=titanic )
+> titanic$Embarked <- model.matrix( ~ Embarked - 1, data=titanic)
+\end{verbatim}
+
+Why don't we just use the \texttt{as.numeric()} function to do the conversion?
+\answerbox{
+answer:
+}
+
+We will divide the Titanic data set into training and test sets, again by randomly sampling $2/3$ of the data to be the training set and using the rest as the test set. We will set a random seed so the the sampling is reproducible.
+\begin{Verbatim}[frame=single]
+> set.seed(1)
+> train_ind <- sample(1:nrow(titanic), 2/3*nrow(titanic))
+\end{Verbatim}
+
+We will now perform KNN using the \texttt{knn()} function, which is part of the \texttt{class} library. This function works rather differently from the other model fitting
+functions that we have encountered thus far. Rather than a two-step
+procedure in which we first fit the model and then we use the model to make
+predictions, the \texttt{knn()} function computes the predictions directly in a single command. Running \texttt{?knn} to display the help page, we see that the function requires four inputs:
+\begin{enumerate}
+\item A matrix containing the predictors associated with the training data,
+labeled \texttt{titanic.train} below.
+\item A matrix containing the predictors associated with the data for which
+we wish to make predictions, labeled \texttt{titanic.test} below.
+\item A vector containing the outcomes (class labels) for the training
+observations,
+labeled \texttt{train.survive} below.
+\item A value for $k$, the number of nearest neighbors to be used by the
+classifier.
+\end{enumerate}
+
+Before applying the \texttt{knn()} function, we normalize each predictors to have unit variance. Here we use function \texttt{scale()} to make each variables to have 0 mean and variance 1.
+\begin{Verbatim}[frame=single]
+> titanic_normal <- scale(titanic[,!names(titanic) %in% 'Survived'])
+> titanic.train <- titanic_normal[train_ind, ]
+> titanic.test <- titanic_normal[-train_ind, ]
+\end{Verbatim}
+
+Why do we need this step?
+\answerbox{ answer:
+}
+
+
+We next create two variables that store the outcome values of the training/test sets.
+
+\begin{Verbatim}[frame=single]
+train.survive = titanic$Survived[train_ind]
+test.survive  = titanic$Survived[-train_ind]
+\end{Verbatim}
+
+We can now apply the \texttt{knn()} function to predict the survival of the passengers. Note that in KNN, if several observations are tied as nearest neighbors, R will randomly break the tie.
+\begin{Verbatim}[frame=single]
+> knn.pred = knn(titanic.train, titanic.test, train.survive, k=1)
+> table(knn.pred, test.survive)
+> mean(knn.pred == test.survive)
+\end{Verbatim}
+Here we choose $K=1$, which gives an error rate of about 23\% (according to my experiment).
+\bigskip
+
+We explore the performance of KNN with other values of $K$.
+Run KNN for $K=1,3,5,10,20,50$. (You may use a for loop for convenience). Report the corresponding error rates, and find the value of $K$ that gives the lowest error rate.
+\answerbox{
+answer:
+}
+
+\bigskip
+
+Finally, compare the prediction performance of KNN (using your optimal $K$) with the logistic regression model from part(a). Which method gives a better accuracy rate in this case?
+\answerbox{
+answer:
+}
+\smallskip
+%\bigskip
+
+\section*{Take Home Questions}
+\begin{enumerate}
+\def\labelenumi{(\arabic{enumi})}
+\itemsep1pt\parskip0pt\parsep0pt
+
+\item We introduced \textit{balanced accuracy} in Part (a). Is balanced accuracy the same as overall accuracy? Prove or give a counterexample.
+\vspace{-0.2cm}
+\answerbox{
+answer:
+}
+
+\item Give an example of a scenario when the balanced accuracy provides a better measure than the overall
+accuracy.
+\answerbox{
+answer:
+}
+
+\item
+  Recall in Lab 1 you tried to get the units of the $\omega$
+  coefficients of the linear regression model. What are the units of the
+  coefficients of the logistic regression model.
+
+
+(Hint: Recall the logistic regression model assumes:
+\[
+	\mathbb{P}(y=1 | {\bf x}, {\bf \beta}) = \frac{1}{1+\exp(-{\bf \beta}^T{\bf
+	x})}
+\]
+
+Try to find an expression $f(p)$ of $p=\mathbb{P}(y=1 | {\bf x}, {\bf \beta})$
+which satisfies $f(p) = {\bf \beta}^T{\bf x}$. We call $f(p)$ ``logit''
+or ``log-odds''. Recall the interpretation of $\beta$ coefficients in
+the linear regression model is the change of outcome variable when a
+predictor changes by 1 unit. Interpret $\beta$ coefficients of the
+logistic regression model in a similar way.)
+
+\answerbox{
+answer:
+}
+
+\bigskip
+
+For every one year of age, a passenger's logit of surviving on Titanic will decrease (or increase) by a factor of what?
+
+\answerbox{
+answer:
+}
+
+\item
+  Go to Canvas and download the Cancer data set: \texttt{pros.xls} and
+  \texttt{pros\_meta.txt}. We want to build a logistic regression model to
+  predict whether the tumor has penetrated the prostatic capsule.
+
+  \bigskip
+
+Load the data into R. Note the 'VOL' column has lots of missing data
+and you need to remove these instances first. We will fit a logistic
+regression model with the data and test the accuracy of our model.
+
+Divide the data set into training and test data. Fit a logistic regression model with the training data. Report the
+summary of your model.
+
+\answerbox{
+  answer:
+}
+
+\item
+  Now let's check the accuracy of your model in Q2. Remember the
+  logistic regression model outputs a probability of penetration $p$ for
+  each patient. We could pick a threshold $p_0$ so that we predict the
+  outcome to be 1 if $p \ge p_0$. Hence different $p_0$ gives different
+  classifiers.
+
+  \bigskip
+
+  Define $\mathrm{FPR} = \frac{f_p}{f_p + t_n}$ to be the false positive rate:
+  the
+proportion of negative instances that are falsely predicted to be
+positive instances. Moreover, define $\mathrm{TPR} = \frac{t_p}{t_p+f_n}$ to be
+the true positive rate:  the proportion of positive instances that are also
+predicted correctly. Each
+$p_0$ gives a new pair of $(\mathrm{FPR}, \mathrm{TPR})$.
+
+\bigskip
+Pick a list of $p_0$ and plot the corresponding (FPR, TPR) pairs on a
+graph. We obtain the FPR vs.\ TPR plot (i.e., the ROC curve) for our logistic
+regression model as shown in Figure~\ref{fig:fprtpr}. (If you generate this
+plot yourself, it will look slightly different due to the randomness in
+splitting in to training and test datasets. But the general trend of the curve
+will be the same.)
+
+\begin{figure}[ht]
+	\centering
+	\includegraphics[width=0.7\textwidth]{FPR-TPR.pdf}
+	\caption{ROC curve: False Positive Rate vs.\ True Positive
+	Rate\label{fig:fprtpr}}
+\end{figure}
+
+\bigskip
+Next, assume we have a balanced data set, i.e.~with 50\% positive
+instances and 50\% negative ones. What would the FPR vs. TPR plot look
+like for the following two classifiers:
+
+\begin{enumerate}
+\def\labelenumi{\alph{enumi}.}
+\item \label{item:a}
+You were guessing the prediction randomly.
+\item \label{item:b}
+You were predicting only one of the classes for everything.
+\end{enumerate}
+
+
+\answerbox{
+answer:
+}
+
+What would the plots in~\ref{item:a} and~\ref{item:b} look like if we have an
+unbalanced data set, say $p\%$ positive class?
+
+\answerbox{
+  answer:
+}
+\item
+  In predicting cancer diagnosis, we would like to be more conservative
+  and prefer to error on the side of a false diagnosis rather than
+  missing cancer. What would you do in this case when making predictions
+  according to the probabilities output by your logistic regression
+  model?
+
+\answerbox{
+answer:
+}
+
+\end{enumerate}
+
+\bigskip
+
+\subsection*{More on Logistic Regression}
+\begin{enumerate}
+\item
+
+Will the fitted coefficients and the classification change if we duplicate the
+whole training set while using the logistic regression? What happens if we only
+duplicate a subset of the training set? Give intuitive explanations and veriy
+your result using the \texttt{Titanic} data set.
+
+\answerbox{answer:
+}
+
+\item Duplicating a subset of the training set may be used to fix an imbalanced data set. A common
+approach is called the oversampling, where we resample or duplicate the minority class to balance the data set. State one potential limitation of the oversampling method.
+\answerbox{
+answer:
+}
+
+\item Recall from the lecture that the logistic regression can be extended
+to the multi-class classification tasks. Consider the following version of
+the \texttt{One-Versus-All} mathod. Suppose we have $K$ classes, for each
+class $i$ where $0\le i\le K-1$, we perform a logistic regression and
+determine the weights $\beta_0^{(i)}$ and $\beta^{(i)}$. We define
+\begin{equation}
+	\mathbb{P}(y=i\ |\ {\bf
+	x},\beta)=
+	\frac{e^{\beta_0^{(i)}+{\beta^{(i)}} \cdot \bf{x}}}{
+		\sum_{j=0}^{K-1}e^{\beta_0^{(j)}+{\beta^{(j)}} \cdot \bf{x}}
+	}
+	\label{eq:log-reg}
+\end{equation}
+In the case of binary classification, i.e. $K=2$, how does the
+predicted probability using \texttt{One-Versus-All} differ from the
+original logistic regression?
+\answerbox{ answer:}
+
+Recall that logistic regression for 2 classes has
+\[
+	\mathbb{P}(y=1\ |\ {\bf{x}},\beta) =
+	\frac{1}{1+e^{-(\beta_0 + \beta \cdot \bf{x}})}
+\]
+What are the relationships between $\beta_0$, $\beta$, $\beta_0^{(i)}$ and
+$\beta^{(i)}$ in the case of binary classification?
+\answerbox{
+	answer:
+}
+In practice, when we perform the classification using~\eqref{eq:log-reg}, we
+will fix a class $i$ as the base class and set $\beta^{(1)} = 0$ and
+$\beta^{(i)} = 0$. Explain briefly why this step is performed. Is the choice of
+$i$ important for classification?
+\answerbox{
+answer:
+}
+
+\item For simplicity, we consider the logistic regression with threshold $0.5$. What is the formula for the classification boundary?
+\answerbox{
+answer:
+}
+Suppose the logistic regression gives $\beta_0$ and $\beta$ as the fitted coefficients. How does the classification result change if we predict instead using the weights $c\beta_0$ and $c\beta$ for some constant $c>0$? Will the classification change if $c<0$.
+\answerbox{
+answer:
+}
+(Optional) Use the observation above, explain heuristically why the logistic regression can perform badly when fitted by the maximum likelihood, when the data \emph{can} be linearly separated?
+
+\answerbox{
+answer:
+}
+(Optional) Test this phenomenon on some simulated data in \texttt{R}. Give a
+printout of the warning messages when you run the logistic regression.
+
+\answerbox{answer:}
+\end{enumerate}
+
+\section*{KNN}
+\begin{enumerate}
+\item
+Compare the performance of KNN with and without normalization of the
+\texttt{Titanic} data set. \\
+
+Create a plot of the value of $K$ vs.\ the associating error rate, where $K\in [1,20]$, with normalization. Next, make the same plot but without normalizing the data set. Compare the two plots.  (You may attach additional page for printing out the 2 plots.) \\
+
+What can you say about the accuracy rates with and without normalization?
+
+\answerbox{
+answer:
+}
+\item What will be the prediction result if we set $K$ to be the total number of training data points?
+\answerbox{
+answer:}
+
+\item Will the classification change if we duplicate the training set while
+keeping $K$ constant? Someone claims that using $K_{\text{duplicated}}=2k$
+neighbors in the duplicated training set should always yield the same
+prediction with using $K_{\text{original}}=k$ neighbors in the original
+training set. Is this claim true? Illustrate it with the \texttt{Titanic} data
+set by plotting the error rates for $K_{\text{duplicated}}=2k$ and
+$K_{\text{original}}=k$, $k\in[1,30]$. (Set \texttt{use.all=FALSE} in
+\texttt{knn}).
+\answerbox{
+answer:
+}
+
+
+\item Make a {\bf concept
+	map}\footnote{\url{https://en.wikipedia.org/wiki/Concept_map}} for the
+	topics
+covered by this lab. While there is no single right answer, you are expected to
+demonstrate that you understand the relationships between various topics in
+the lab.
+
+\end{enumerate}
+
+\end{document}

@@ -1,0 +1,716 @@
+\documentclass{article}
+
+
+    \usepackage{listings}
+    \usepackage{graphicx} % Used to insert images
+    \usepackage{adjustbox} % Used to constrain images to a maximum size
+    \usepackage{color} % Allow colors to be defined
+    \usepackage{enumerate} % Needed for markdown enumerations to work
+    \usepackage{geometry} % Used to adjust the document margins
+    \usepackage{amsmath} % Equations
+    \usepackage{amssymb} % Equations
+    \usepackage[mathletters]{ucs} % Extended unicode (utf-8) support
+    \usepackage[utf8x]{inputenc} % Allow utf-8 characters in the tex document
+    \usepackage{fancyvrb} % verbatim replacement that allows latex
+    \usepackage{grffile} % extends the file name processing of package graphics
+                         % to support a larger range
+    % The hyperref package gives us a pdf with properly built
+    % internal navigation ('pdf bookmarks' for the table of contents,
+    % internal cross-reference links, web links for URLs, etc.)
+    \usepackage{hyperref}
+    \usepackage{longtable} % longtable support required by pandoc >1.10
+    \usepackage{booktabs}  % table support for pandoc > 1.12.2
+
+    \usepackage{amsmath,amsthm,amssymb,graphicx,fancyhdr,enumerate,geometry,bm}
+    \usepackage{listings, alltt}
+    \usepackage{color}
+	\usepackage{mdframed}
+	\usepackage{verbatimbox}
+
+	% algorithm
+	\usepackage{algorithm,algpseudocode}
+
+    \geometry{left=4cm, right=3.5cm, top=3.5cm, bottom=3.5cm}
+    \setlength{\parindent}{0pt}
+    \def\printsol{}
+
+	% A box for the answers
+	\newcommand{\answerbox}[1]{
+		\begin{center}
+			\fbox{\begin{minipage}{\textwidth}
+	        {\color{blue}
+		\ifdefined\printsol #1
+		\else
+		\phantom{
+		\begin{minipage}{\textwidth} #1
+		\end{minipage}
+		}
+		\fi}
+			\end{minipage}}
+		\end{center}
+    }
+    \pagestyle{fancy}
+    \fancyhf{}
+    \lhead{ORIE 4740/5740, Spring '22, Lab 4}
+    \rhead{\thepage}
+
+    \begin{document}
+
+        \begin{center}
+        {\Large \bf Lab 4: Linear Model Selection and Regularization}
+
+            \bigskip
+
+                {\bf First Name}: \underline{\hspace{2.5cm}}  {\bf Last Name}:
+                \underline{\hspace{2.5cm}} {\bf NetID}:
+                \underline{\hspace{2.5cm}}
+            \end{center}
+\textbf{Lab 4 is due March 8th (Tuesday) by 11:59pm on Gradescope. Submit your
+answers as one .pdf file, including all R code that you had to write to obtain
+your answers. Regrade requests should be submitted via Gradescope.
+Questions should be sent to Tao Jiang (\url{tj293@cornell.edu}).}
+
+\bigskip
+\textbf {If the question requires running R code, please attach your code snippet (screenshot/text) to each corresponding question}
+\bigskip
+
+In this lab, we will cover linear model selection and regularization.
+
+\bigskip
+
+We will use the \textit{Hitters} data set, which has 322 observations of major
+league players on 20 variables from the 1986 and 1987 seasons. We wish to
+predict a baseball player's Salary (available via the \texttt{Salary} column)
+on the basis of various statistics associated with performance. The dataset is
+available from the \texttt{ISLR} library.
+
+\begin{Verbatim}[frame=single]
+> library(ISLR)
+> fix(Hitters)
+\end{Verbatim}
+
+The first step is to preprocess the data and remove any observations with
+missing entries, which should leave you with a total of $263$ observations.
+
+To make sure we are not getting a horrible fit, use the studentized residuals
+(recall Lab 1) to \textbf{remove} any points characterized as outliers. Report
+the adjusted-$R^2$ score of a linear model fit using all predictors
+\textit{before} and \textit{after} you remove the outliers. You should observe
+a nontrivial improvement. \textbf{(R code required)}
+
+In the sequel, \textbf{we will refer to the resulting data frame as }
+\texttt{df.post}. 
+
+\begin{Verbatim}[frame=single]
+
+
+
+
+
+
+
+
+
+
+\end{Verbatim}
+
+Examine the summary of your model fit \textbf{after} removing the outliers --
+you should (hopefully) see a very large $p$-value for the intercept. Fit a
+linear model \textbf{without} intercept, and report its adjusted $R^2$ score.
+Did the situation improve? \textbf{(R code required)}
+
+\begin{Verbatim}[frame=single]
+
+
+
+
+
+
+
+
+\end{Verbatim}
+%%%%% Part 1. Subset Selection Methods
+\section{Subset Selection Methods}
+We focus on three subset selection methods here: Best Subset Selection and Forward and Backward Stepwise Selection. These selections can be performed using \texttt{regsubsets()} with argument \texttt{method = "exhaustive"} (default) or \texttt{"forward"} or \texttt{"backward"} for the methods, respectively. The function \texttt{regsubsets()} are from \texttt{library(leaps)}
+
+
+For example, the following code performs best-subset selection, with maximum
+number of predictors equal to $\texttt{nvmax} = 19$. Note that we are explicitly
+instructing R to not use an intercept
+
+\begin{Verbatim}[frame=single]
+> library(leaps)
+> regfit.full <- regsubsets(Salary~., data=df.post, nvmax=19, intercept=F)
+> reg.summary <- summary(regfit.full)
+\end{Verbatim}
+
+Which predictors are selected for the best 5-variable model?
+\begin{Verbatim}[frame=single]
+
+
+\end{Verbatim}
+We now have $19$ candidate models in our hands. In order to pick the ``best''
+of them, we can compute their RSS, $R^2$ score, adjusted $R^2$ score, $C_p$
+score and BIC. \textbf{Without looking} at the model summary, can you explain
+which of these models will have:
+\begin{itemize}
+\item the smallest RSS?
+\item the largest $R^2$ score?
+\end{itemize}
+Is it a good idea to select either of these models without looking at the other
+statistics? Why or why not?
+
+\begin{Verbatim}[frame=single]
+
+
+
+
+
+
+
+\end{Verbatim}
+
+\newpage
+The summary object \texttt{reg.summary} contains all the aforementioned
+information. Plot the adjusted $R^2$ score and the BIC score of your models,
+and explain which model you would choose for each metric. 
+
+\begin{Verbatim}[frame=single]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{Verbatim}
+
+\newpage
+In the following, plot the $C_p$ against number of predictors in the model.
+What is the optimal number of predictors based on $C_p$?
+\begin{Verbatim}[frame=single]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{Verbatim}
+
+In this example, the number of predictors $(p = 19)$ is small enough so that
+using best-subset selection isn't super time consuming. Behind the scenes, the package may also use
+pruning steps, to avoid fitting a few models. In the sequel, we will also
+examine forward and backward stepwise selection. These can be implemented
+using \texttt{regsubsets()} as well (see \texttt{method} argument).
+
+
+\bigskip
+We can also select models using the validation approach (such as K-fold cross
+validation). Problem 1 of the take-home questions asks you to implement 10-fold
+cross validation for forward stepwise selection method.
+
+
+
+
+
+
+
+
+
+%%%%%%% Part 2: Ridge and Lasso
+\section{Ridge and Lasso}
+
+Ridge and lasso are two commonly-used regularization techniques in regression. When solving an optimization problem to minimize the squared loss, the two methods apply different penalties on regression coefficients. \\
+
+In fitting both methods, we use the well-written R library \texttt{glmnet}.
+The main function \texttt{glmnet()} has an argument \texttt{alpha} that
+controls whether the fit being ridge or lasso: \texttt{alpha = 0} corresponds
+to ridge and \texttt{alpha = 1} corresponds to lasso. The syntax of
+\texttt{glmnet()} is slightly different from what we have encountered so far.
+In particular, we must pass in an $x$ matrix with predictors in columns and a
+$y$ vector separately:
+
+\begin{Verbatim}[frame=single]
+> x <- model.matrix(Salary~., df.post)[,-1]
+> y <- df.post$Salary
+\end{Verbatim}
+
+Both ridge and lasso has a tuning parameter to tune. The user can either
+specify a sequence of tuning parameter himself/herself or let \texttt{glmnet()}
+to generate a sequence automatically. Let us first look at how to specify the
+tuning parameter sequence ourselves. Below we construct 100 equally-spaced
+penalty values on log-scale and fit a ridge regression with them.
+
+\begin{Verbatim}[frame=single]
+> library(glmnet)
+> grid <- 10^seq(10, -2, length=100) # lambda sequence
+> ridge.mod <- glmnet(x, y, alpha=0, lambda=grid, intercept=FALSE)
+> dim(coef(ridge.mod))
+\end{Verbatim}
+
+
+\texttt{ridge.mod\$beta} is a matrix with the $j$th column being ridge
+coefficients $(\hat\beta^{\textrm{ridge}}_{\lambda_j})$ corresponding to the
+$j$th
+tuning parameter $(\lambda_j)$. Plot the $\ell_2$ norm of
+$\hat\beta^{\textrm{ridge}}_\lambda$ versus $\log(\lambda)$. What pattern do
+you observe and why does the pattern look like this?
+
+\begin{Verbatim}[frame=single]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{Verbatim}
+
+\bigskip
+
+With the ridge fit \texttt{ridge.mod}, we can predict at a new tuning parameter value. For example, to predict the response when $\lambda = 50$,
+given a new set of data \texttt{newx}, we can run
+
+\begin{Verbatim}[frame=single]
+> # Predict at lambda = 50
+> predict(ridge.mod, newx, s=50)
+\end{Verbatim}
+\bigskip
+
+What is the drawback of manually specifying the tuning parameter $\lambda$?
+
+\begin{Verbatim}[frame=single]
+
+
+\end{Verbatim}
+\bigskip
+
+Below we will let \texttt{glmnet()} use its own sequence of tuning parameters without providing one ourselves. By default, \texttt{glmnet()} constructs a sequence of 100 tuning parameters with the first one being the largest.
+
+\bigskip
+
+To select optimal tuning parameter, we use K-fold cross validation. The \texttt{glmnet} package has a convenient cross validation function called \texttt{cv.glmnet()}. It is important that model fit and cross validation are done on the same sequence of tuning parameters. So don't forget to pass the tuning parameter in \texttt{cv.glmnet()}. In the following, we perform 10-fold cross validation after splitting training and test sets of equal sizes. For reproducible results, we set seed for random number generator before train-test split and before cross validaton.
+
+\bigskip
+
+\begin{Verbatim}[frame=single]
+> # Split the data into training data set and test data set.
+> set.seed(1)
+> train <- sample(1:nrow(x), nrow(x)/2)
+> y.train <- y[train]
+> y.test <- y[-train]
+>
+> # Model fit on the training set
+> ridge.mod <- glmnet(x[train,], y[train], alpha=0, lambda=grid,
++ intercept=FALSE)
+> # Use 10-fold cross-validation to choose lambda
+> set.seed(1)
+> cv.out <- cv.glmnet(x[train,], y[train], nfolds = 10, lambda=grid,
++ alpha=0, intercept=FALSE)
+\end{Verbatim}
+
+Plot the cross validation error versus the log of the tuning parameter.
+What is the value of the optimal tuning parameter? Using this optimal value,
+what is the mean squared prediction error on the \emph{test} set?
+
+\begin{Verbatim}[frame=single]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{Verbatim}
+%%% Lasso
+Fitting and cross validating Lasso can be done similarly. In the following, we
+perform 10-fold cross validation for lasso on the same training set.
+
+\begin{Verbatim}[frame=single]
+> # Model fit on the training set
+> lasso.mod <- glmnet(x[train,], y[train], alpha=1, lambda=grid,
++ intercept=FALSE)
+> # Use 10-fold cross-validation to choose lambda
+> cv.out <- cv.glmnet(x[train,], y[train], alpha=1, lambda=grid,
++ intercept=FALSE)
+\end{Verbatim}
+
+Plot the cross validation error versus the log of the tuning parameter:
+
+\begin{Verbatim}[frame=single]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{Verbatim}
+What is the value of optimal tuning parameter? What is the mean squared
+prediction error on the test set? How many predictors have their coefficients
+equal to $0$ at the optimal tuning parameter?
+
+\begin{Verbatim}[frame=single]
+
+
+\end{Verbatim}
+
+\newpage
+%%%%%%% Take-home
+\section*{Take-Home Problems}
+
+\subsection*{1. Subset selection}
+For this problem, assume that you are given a sample of $n$ points with $p$
+predictors.
+
+\begin{enumerate}
+    \item Suppose that you are running best subset selection for model
+    selection. How many models will you have to fit in total?
+    \begin{Verbatim}[frame=single]
+    
+    
+    
+    
+    
+    \end{Verbatim}
+    \item In the same setting as the previous question, let $\mathcal{M}_i$
+    denote the best model using $i$ predictors. Let
+    $\mathrm{err}_{\mathrm{train}}(\mathcal{M}_i)$ denote its training MSE.
+    Is is
+    possible to have $\mathrm{err}_{\mathrm{train}}(\mathcal{M}_i) <
+    \mathrm{err}_{\mathrm{train}}(\mathcal{M}_{i + j})$, for some $j > 0$?
+    Why or why not?
+    \begin{Verbatim}[frame=single]
+    
+    
+    
+    \end{Verbatim}
+
+    \item Consider two models using $i$ predictors:
+    $\mathcal{M}_i^{\textrm{best-subset}}$, found using best-subset selection,
+    and the model $\mathcal{M}_i^{\textrm{forward}}$, which is found using
+    forward stepwise selection. Which of the two models has \textbf{lower}
+    training error?
+
+    \begin{Verbatim}[frame=single]
+    
+    
+    
+    
+    \end{Verbatim}
+
+    \item Now, suppose that you are using stepsize selection to find a
+    good model. Which of the two variants would you prefer to use (forward vs.
+    backward) if $p > n$, and why?
+    \begin{Verbatim}[frame=single]
+    
+    
+    
+    \end{Verbatim}
+
+    \item Read pages 248-250 from the ISLR book (Section 6.5.3) about using
+    cross-validation combined with best subset selection. Because
+    \texttt{regsubsets} does not provide a \texttt{predict} function, we will
+    have to provide one. To avoid getting into the subtleties of the function
+    provided in \texttt{ISLR}, we will define the following variant:
+    \begin{Verbatim}[frame=single]
+        predict.regsubsets <- function(regfit, newdata, id, ...) {
+            mat <- model.matrix(formula(Salary~. + 0), newdata)
+            coefi <- coef(regfit, id=id)
+            xvars <- names(coefi)
+            as.matrix(mat[, xvars]) %*% coefi
+        }
+    \end{Verbatim}
+    To use this function for prediction using the best subset of $p$ predictors
+    and given input data \texttt{dfIn}, we simply call
+    \begin{Verbatim}[frame=single]
+        predict(regfit.full, dfIn, p)
+    \end{Verbatim}
+    Your objective here: use $K$-fold cross-validation with $K = 5$ and $K = 10$
+    to compute the number of predictors achieving the best validation error. Use
+    the code in page 250 of ISLR as a guide, but remember to use our version of
+    \texttt{predict}, and provide \texttt{intercept=F} as an argument to
+    \texttt{regsubsets}. You may want to set the seed to a fixed value as well. \textbf{(R code required)}
+
+
+\begin{Verbatim}[frame=single]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{Verbatim}
+
+\newpage
+\item Repeat the experiment using forward and backward stepwise selection. Do
+your results differ significantly? List the predictors selected using forward
+and backward stepwise selection, and attach your .R code.
+    \begin{Verbatim}[frame=single]
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    \end{Verbatim}
+\end{enumerate}
+
+\subsection*{2. Regularization}
+In the following, recall the definitions of the $\ell_p$ norms for $p \in \{1,
+2\}$ for a vector in $\mathbb{R}^n$:
+\begin{equation}
+    \| u \|_1 := \sum_{i = 1}^n |u_i|, \quad
+    \| u \|_2 := \sqrt{\sum_{i = 1}^n u_i^2}
+\end{equation}
+
+\begin{enumerate}
+\item Write down the optimization problems for the Lasso and ridge regression
+in \textit{matrix/vector} notation using the following notations: $y \in
+\mathbb{R}^n$ is the vector of responses, $X \in \mathbb{R}^{n \times p}$ is
+the predictor matrix, $\beta \in \mathbb{R}^p$ is the vector of regression
+coefficients, $\beta_0 \in \mathbb{R}$ is the intercept, and $\mathbf{1}_n$
+is the all-ones vector in $n$ dimensions.
+\begin{Verbatim}[frame=single]
+
+
+
+
+
+
+
+\end{Verbatim}
+\item Suppose we estimate the coefficients of a linear regression model using
+the \textbf{constrained} version of the lasso, i.e.
+\[
+    \hat{\beta}_{\lambda} := \arg \min_{\beta} \left\{
+    \sum_{i = 1}^n \left(y_i - \beta_0 - \sum_{j=1}^p \beta_j x_{ij}\right)^2
+    \quad \mbox{subject to} \quad \| \beta \|_1 \leq \lambda
+    \right\}.
+\]
+Assume we start with $\lambda = 0$ and gradually increase it, to obtain a
+set of solutions $\hat{\beta}_{\lambda}$. Which of the following is true about
+the \textbf{training} error (RSS) of the solutions, and why?
+\begin{enumerate}
+\item as we increase $\lambda$, the training error starts decreasing until a
+critical value $\lambda^{\star}$, after which it increases again
+\label{item:lasso-1}
+\item as we increase $\lambda$, the training error can never increase
+\end{enumerate}
+\begin{Verbatim}[frame=single]
+
+
+
+
+
+\end{Verbatim}
+
+\item Suppose that we now use the familiar form of ridge regression, i.e. for
+a fixed $\lambda$ we estimate
+\begin{equation}
+    \hat{\beta}_{\lambda} :=
+    \arg\min_{\beta} \left\{
+        \sum_{i = 1}^n \left(y_i - \beta_0 - \sum_{j=1}^p \beta_j
+        x_{ij}\right)^2 + \lambda \| \beta \|^2
+    \right\}
+    \label{eq:ridge-prob}
+\end{equation}
+What happens to the \textbf{bias} of the resulting linear model as we grow
+$\lambda$, starting from $0$, and why?
+\begin{Verbatim}[frame=single]
+
+
+
+
+\end{Verbatim}
+What do you predict will happen to the \textbf{test} error as you grow
+$\lambda$, if your model for $\lambda = 0$ has very small training error but
+large test error? Explain.
+\begin{Verbatim}[frame=single]
+
+
+
+
+
+\end{Verbatim}
+
+\item Suppose that you run linear regression using $\texttt{lm()}$ and, when
+you examine the summary of the model, observe that almost all variables exhibit
+small $p$-values (assume $p \ll n$). On the other hand, your test error is
+significantly higher compared to the training error. Which of the two
+regularization methods (ridge regression vs. Lasso) would you prefer to use,
+and why?
+\begin{Verbatim}[frame=single]
+
+
+
+
+
+\end{Verbatim}
+
+\item To inspect the Lasso's tendency to promote sparse solutions, we will
+create a set of synthetic data following the model below:
+\begin{equation}
+    y := X \beta + \varepsilon, \; \varepsilon_i \sim \mathcal{N}(0, 1)
+\end{equation}
+\begin{itemize}
+\item Generate such a set of data, containing $n = 500$ samples and $p = 600$
+predictors. Use \texttt{rnorm} to generate $X$ and $\varepsilon$, and the method
+of your choice to generate $\beta$ (e.g. \texttt{runif}). Then, set half of
+$\beta$'s coordinates to $0$ (you can set the first $300$ coordinates to $0$
+for simplicity).
+\item Split the data into $60\%$ training data
+and $40\%$ test data, and use the Lasso with $5$-fold and $10$-fold cross
+validation to select the value of $\lambda$. Plot the MSE as a function of
+$\log(\lambda)$ and
+interpret the results. How many elements of $\beta$ are set to $0$ for the
+``best'' value of $\lambda$ found?
+\item Use the best value of $\lambda$ found to generate a prediction over the
+test set, and report its MSE.
+\item Could you use \texttt{lm} to fit a linear model here? Explain why or why
+not.
+\end{itemize}
+
+
+\begin{Verbatim}[frame=single]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{Verbatim}
+\end{enumerate}
+
+\paragraph{Concept map.} Make a \textbf{concept map} for the topics covered by
+this lab. While there is no single right answer, you should demonstrate that you
+understand the relationships between various topics in the lab.
+
+\end{document}
